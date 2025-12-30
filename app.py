@@ -12,6 +12,18 @@ st.set_page_config(
     layout="centered"
 )
 
+# ==========================
+# SESSION STATE INIT
+# ==========================
+if "frame" not in st.session_state:
+    st.session_state.frame = 0
+
+if "auto_play" not in st.session_state:
+    st.session_state.auto_play = False
+
+# ==========================
+# TITLE (KEEP TOP)
+# ==========================
 st.title("🧵 Thread Art – Modular Multiplication")
 st.markdown("**Rule:** `end = (i × k) mod N`")
 
@@ -22,40 +34,45 @@ st.sidebar.header("Parameters")
 
 N = st.sidebar.slider("Total Nodes (N)", 20, 120, 37)
 k = st.sidebar.slider("Multiplier (k)", 2, 50, 9)
-interval = st.sidebar.slider("Auto Animation Interval (ms)", 50, 500, 273)
+interval = st.sidebar.slider("Auto Animation Interval (ms)", 50, 500, 250)
 show_numbers = st.sidebar.checkbox("Show Node Numbers", True)
 
-# ==========================
-# SESSION STATE (SAFE)
-# ==========================
-if "frame" not in st.session_state:
-    st.session_state.frame = 0
-
-# 🔴 CRITICAL FIX: clamp frame whenever N changes
+# 🔴 Clamp frame when N changes
 st.session_state.frame = min(st.session_state.frame, N - 1)
 
 # ==========================
-# CONTROL BUTTONS
+# BUTTON ROW (FIXED POSITION)
 # ==========================
-c1, c2, c3 = st.columns(3)
+b1, b2, b3, b4 = st.columns(4)
 
-with c1:
-    prev_btn = st.button("⏮ Previous")
+with b1:
+    prev_btn = st.button("⏮ Previous", use_container_width=True)
 
-with c2:
-    next_btn = st.button("⏭ Next")
+with b2:
+    next_btn = st.button("⏭ Next", use_container_width=True)
 
-with c3:
-    auto_btn = st.button("▶ Auto Animate")
+with b3:
+    auto_btn = st.button("▶ Auto Animate", use_container_width=True)
+
+with b4:
+    stop_btn = st.button("⏸ Stop", use_container_width=True)
 
 # ==========================
-# FRAME CONTROL
+# BUTTON LOGIC
 # ==========================
+if prev_btn:
+    st.session_state.auto_play = False
+    st.session_state.frame = max(st.session_state.frame - 1, 0)
+
 if next_btn:
+    st.session_state.auto_play = False
     st.session_state.frame = min(st.session_state.frame + 1, N - 1)
 
-if prev_btn:
-    st.session_state.frame = max(st.session_state.frame - 1, 0)
+if auto_btn:
+    st.session_state.auto_play = True
+
+if stop_btn:
+    st.session_state.auto_play = False
 
 # ==========================
 # MATH
@@ -70,7 +87,7 @@ x = np.cos(angles)
 y = np.sin(angles)
 
 # ==========================
-# DRAW ONE FRAME
+# DRAW FRAME FUNCTION
 # ==========================
 def draw_frame(i):
     fig, ax = plt.subplots(figsize=(5.2, 5.2))
@@ -141,22 +158,22 @@ def draw_frame(i):
     return fig
 
 # ==========================
-# SINGLE CANVAS (NO STACKING)
+# CANVAS (PINNED, NO SCROLL)
 # ==========================
-canvas = st.empty()
+canvas = st.container()
+with canvas:
+    fig = draw_frame(st.session_state.frame)
+    st.pyplot(fig)
 
 # ==========================
-# AUTO ANIMATION
+# AUTO PLAY LOOP (SAFE)
 # ==========================
-if auto_btn:
-    for i in range(st.session_state.frame, N):
-        st.session_state.frame = i
-        fig = draw_frame(i)
-        canvas.pyplot(fig)
-        time.sleep(interval / 1000)
+if st.session_state.auto_play:
+    time.sleep(interval / 1000)
+    st.session_state.frame += 1
 
-# ==========================
-# MANUAL DISPLAY
-# ==========================
-fig = draw_frame(st.session_state.frame)
-canvas.pyplot(fig)
+    if st.session_state.frame >= N:
+        st.session_state.auto_play = False
+        st.session_state.frame = N - 1
+
+    st.experimental_rerun()
