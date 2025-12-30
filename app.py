@@ -4,57 +4,39 @@ import streamlit as st
 import time
 from math import gcd
 
-# ==========================
-# PAGE CONFIG
-# ==========================
-st.set_page_config(
-    page_title="Thread Art – Modular Multiplication",
-    layout="wide"
-)
+# Page config
+st.set_page_config(page_title="Thread Art – Modular Multiplication", layout="wide")
 
-# ==========================
-# SESSION STATE
-# ==========================
+# Session state
 if "frame" not in st.session_state:
     st.session_state.frame = 0
-
 if "auto_play" not in st.session_state:
     st.session_state.auto_play = False
 
-# ==========================
-# SIDEBAR PARAMETERS
-# ==========================
+# Sidebar inputs
 st.sidebar.header("Parameters")
-
 N = st.sidebar.slider("Total Nodes (N)", 20, 120, 72)
 k = st.sidebar.slider("Multiplier (k)", 2, 50, 9)
 interval = st.sidebar.slider("Auto Animation Interval (ms)", 50, 500, 250)
 show_numbers = st.sidebar.checkbox("Show Node Numbers", True)
 
-# Clamp frame safely
 st.session_state.frame = min(st.session_state.frame, N - 1)
 
-# ==========================
-# TOP TITLE
-# ==========================
+# Title
 st.title("🧵 Thread Art – Modular Multiplication")
-st.markdown("**Rule:** `end = (i × k) mod N`")
+st.write("Rule: end = (i × k) mod N")
 
-# ==========================
-# CONTROL BUTTONS
-# ==========================
-b1, b2, b3, b4 = st.columns(4)
+# Controls
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    prev_btn = st.button("⏮ Previous")
+with c2:
+    next_btn = st.button("⏭ Next")
+with c3:
+    auto_btn = st.button("▶ Auto Animate")
+with c4:
+    stop_btn = st.button("⏸ Stop")
 
-with b1:
-    prev_btn = st.button("⏮ Previous", use_container_width=True)
-with b2:
-    next_btn = st.button("⏭ Next", use_container_width=True)
-with b3:
-    auto_btn = st.button("▶ Auto Animate", use_container_width=True)
-with b4:
-    stop_btn = st.button("⏸ Stop", use_container_width=True)
-
-# Button logic
 if prev_btn:
     st.session_state.auto_play = False
     st.session_state.frame = max(st.session_state.frame - 1, 0)
@@ -69,24 +51,64 @@ if auto_btn:
 if stop_btn:
     st.session_state.auto_play = False
 
-# ==========================
-# MATH
-# ==========================
+# Math
 i = st.session_state.frame
 end_val = (i * k) % N
 cycles = gcd(N, k - 1)
 
-# ==========================
-# TWO COLUMN LAYOUT
-# ==========================
-left_col, right_col = st.columns([1, 1])
+# Layout
+left, right = st.columns(2)
 
-# --------------------------
-# LEFT: CALCULATION PANEL
-# --------------------------
-with left_col:
-    st.subheader("📐 Calculation")
+# Left: math explanation
+with left:
+    st.subheader("Calculation")
+    st.write(f"i = {i}")
+    st.write(f"k = {k}")
+    st.write(f"N = {N}")
+    st.write(f"end = ({i} × {k}) mod {N}")
+    st.write(f"end = {end_val}")
+    st.write(f"focal loops = gcd(N, k − 1)")
+    st.write(f"gcd({N}, {k-1}) = {cycles}")
 
-    st.markdown(
-        f"""
-**Rule**
+# Right: animation
+with right:
+    angles = np.linspace(0, 2*np.pi, N, endpoint=False)
+    x = np.cos(angles)
+    y = np.sin(angles)
+
+    fig, ax = plt.subplots(figsize=(4.5, 4.5))
+    fig.patch.set_facecolor("black")
+    ax.set_facecolor("black")
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
+
+    ax.scatter(x, y, s=20, color="cyan")
+
+    if show_numbers:
+        for idx in range(N):
+            ax.text(x[idx]*1.07, y[idx]*1.07, str(idx),
+                    color="white", fontsize=6, ha="center", va="center")
+
+    for j in range(i):
+        ax.plot([x[j], x[(j*k) % N]],
+                [y[j], y[(j*k) % N]],
+                color="#e91e63", linewidth=0.7)
+
+    ax.plot([x[i], x[end_val]], [y[i], y[end_val]],
+            color="yellow", linewidth=2)
+
+    ax.scatter(x[i], y[i], s=70, color="lime")
+    ax.scatter(x[end_val], y[end_val], s=70, color="red")
+
+    st.pyplot(fig, use_container_width=True)
+
+# Auto animation
+if st.session_state.auto_play:
+    time.sleep(interval / 1000)
+    st.session_state.frame += 1
+    if st.session_state.frame >= N:
+        st.session_state.auto_play = False
+        st.session_state.frame = N - 1
+    st.experimental_rerun()
