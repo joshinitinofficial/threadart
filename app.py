@@ -7,7 +7,7 @@ from math import gcd
 # ==========================
 # STREAMLIT CONFIG
 # ==========================
-st.set_page_config(page_title="Thread Art Animation", layout="centered")
+st.set_page_config(page_title="Thread Art Animation", layout="wide")
 
 st.title("🧵 Thread Art – Live Modular Multiplication")
 st.markdown("**Rule:** `end = (i × k) mod N`")
@@ -17,12 +17,11 @@ st.markdown("**Rule:** `end = (i × k) mod N`")
 # ==========================
 st.sidebar.header("Parameters")
 
-N = st.sidebar.slider("Total Nodes (N)", 20, 150, 60)
-k = st.sidebar.slider("Multiplier (k)", 2, 50, 7)
-interval = st.sidebar.slider("Animation Interval (ms)", 50, 500, 120)
+N = st.sidebar.slider("Total Nodes (N)", 20, 150, 72)
+k = st.sidebar.slider("Multiplier (k)", 2, 50, 8)
+interval = st.sidebar.slider("Animation Interval (ms)", 50, 500, 250)
 
 show_numbers = st.sidebar.checkbox("Show Node Numbers", True)
-
 start_button = st.sidebar.button("▶ Start Animation")
 
 # ==========================
@@ -31,7 +30,7 @@ start_button = st.sidebar.button("▶ Start Animation")
 cycles = gcd(N, k - 1)
 
 # ==========================
-# PLACEHOLDER FOR LIVE PLOT
+# PLACEHOLDER
 # ==========================
 plot_placeholder = st.empty()
 
@@ -52,6 +51,7 @@ if start_button:
     ax.set_facecolor("black")
     ax.set_aspect("equal")
     ax.axis("off")
+
     ax.set_xlim(-1.4, 1.4)
     ax.set_ylim(-1.4, 1.4)
 
@@ -68,6 +68,17 @@ if start_button:
                 ha="center",
                 va="center"
             )
+
+    # ✅ Create ONE persistent text object
+    info_text = ax.text(
+        -1.35, 1.25,
+        "",
+        color="white",
+        fontsize=10,
+        ha="left",
+        va="top",
+        family="monospace"
+    )
 
     active_line = None
     start_dot = None
@@ -101,10 +112,8 @@ if start_button:
         start_dot = ax.scatter(x[start], y[start], s=90, color="lime", zorder=4)
         end_dot   = ax.scatter(x[end], y[end], s=90, color="red", zorder=4)
 
-        # Math text
-        ax.texts.clear()
-        ax.text(
-            -1.35, 1.25,
+        # ✅ Update text safely
+        info_text.set_text(
             f"Rule:\n"
             f"  end = (i × k) mod N\n\n"
             f"Current step:\n"
@@ -113,24 +122,16 @@ if start_button:
             f"  end = {end}\n\n"
             f"Final structure:\n"
             f"  focal loops = gcd(N, k − 1)\n"
-            f"  gcd({N}, {k-1}) = {cycles}",
-            color="white",
-            fontsize=10,
-            ha="left",
-            va="top",
-            family="monospace"
+            f"  gcd({N}, {k-1}) = {cycles}"
         )
 
-        # Update Streamlit plot
         plot_placeholder.pyplot(fig)
-
-        # Control speed
         time.sleep(interval / 1000)
 
-    st.success("Animation complete!")
+    st.success("Animation completed successfully!")
 
 # ==========================
-# INFO
+# FOOTER
 # ==========================
 st.markdown("---")
 st.markdown(
