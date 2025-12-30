@@ -59,16 +59,28 @@ cycles = gcd(N, k - 1)
 # Layout
 left, right = st.columns(2)
 
-# Left: math explanation
+# Left: math explanation (student friendly)
 with left:
-    st.subheader("Calculation")
-    st.write(f"i = {i}")
-    st.write(f"k = {k}")
-    st.write(f"N = {N}")
+    st.subheader("📐 Step-by-Step Calculation")
+
+    st.write("**Given Parameters**")
+    st.write(f"• Total Nodes (N) = {N}")
+    st.write(f"• Multiplier (k) = {k}")
+    st.write(f"• Current Index (i) = {i}")
+
+    st.write("—" * 25)
+
+    st.write("**Applying the Rule**")
+    st.write("Rule: end = (i × k) mod N")
     st.write(f"end = ({i} × {k}) mod {N}")
     st.write(f"end = {end_val}")
-    st.write(f"focal loops = gcd(N, k − 1)")
-    st.write(f"gcd({N}, {k-1}) = {cycles}")
+
+    st.write("—" * 25)
+
+    st.write("**Final Structure Insight**")
+    st.write("Number of focal loops = gcd(N, k − 1)")
+    st.write(f"gcd({N}, {k - 1}) = {cycles}")
+
 
 # Right: animation
 with right:
