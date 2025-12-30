@@ -104,14 +104,13 @@ with right:
 
     st.pyplot(fig, use_container_width=True)
 
-# ------------------------------
 # Auto animation (Streamlit-safe)
-# ------------------------------
 if st.session_state.auto_play:
     if st.session_state.frame < N - 1:
         time.sleep(interval / 1000)
         st.session_state.frame += 1
-        st.experimental_rerun()
+        st.rerun()
     else:
         st.session_state.auto_play = False
+
 
