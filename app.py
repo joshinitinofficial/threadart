@@ -8,7 +8,7 @@ from math import gcd
 # PAGE CONFIG
 # ==========================
 st.set_page_config(
-    page_title="Thread Art – Teaching Tool",
+    page_title="Thread Art – Modular Multiplication",
     layout="centered"
 )
 
@@ -20,11 +20,19 @@ st.markdown("**Rule:** `end = (i × k) mod N`")
 # ==========================
 st.sidebar.header("Parameters")
 
-N = st.sidebar.slider("Total Nodes (N)", 20, 120, 72)
-k = st.sidebar.slider("Multiplier (k)", 2, 50, 8)
-interval = st.sidebar.slider("Auto Animation Interval (ms)", 50, 500, 200)
-
+N = st.sidebar.slider("Total Nodes (N)", 20, 120, 37)
+k = st.sidebar.slider("Multiplier (k)", 2, 50, 9)
+interval = st.sidebar.slider("Auto Animation Interval (ms)", 50, 500, 273)
 show_numbers = st.sidebar.checkbox("Show Node Numbers", True)
+
+# ==========================
+# SESSION STATE (SAFE)
+# ==========================
+if "frame" not in st.session_state:
+    st.session_state.frame = 0
+
+# 🔴 CRITICAL FIX: clamp frame whenever N changes
+st.session_state.frame = min(st.session_state.frame, N - 1)
 
 # ==========================
 # CONTROL BUTTONS
@@ -41,10 +49,13 @@ with c3:
     auto_btn = st.button("▶ Auto Animate")
 
 # ==========================
-# SESSION STATE
+# FRAME CONTROL
 # ==========================
-if "frame" not in st.session_state:
-    st.session_state.frame = 0
+if next_btn:
+    st.session_state.frame = min(st.session_state.frame + 1, N - 1)
+
+if prev_btn:
+    st.session_state.frame = max(st.session_state.frame - 1, 0)
 
 # ==========================
 # MATH
@@ -59,25 +70,26 @@ x = np.cos(angles)
 y = np.sin(angles)
 
 # ==========================
-# DRAW FUNCTION (ONE FRAME)
+# DRAW ONE FRAME
 # ==========================
 def draw_frame(i):
-    fig, ax = plt.subplots(figsize=(5.5, 5.5))
+    fig, ax = plt.subplots(figsize=(5.2, 5.2))
     fig.patch.set_facecolor("black")
     ax.set_facecolor("black")
     ax.set_aspect("equal")
     ax.axis("off")
 
-    ax.set_xlim(-1.35, 1.35)
-    ax.set_ylim(-1.35, 1.35)
+    ax.set_xlim(-1.3, 1.3)
+    ax.set_ylim(-1.3, 1.3)
 
     # Nodes
-    ax.scatter(x, y, s=20, color="cyan", zorder=3)
+    ax.scatter(x, y, s=22, color="cyan", zorder=3)
 
     if show_numbers:
         for idx in range(N):
             ax.text(
-                x[idx]*1.08, y[idx]*1.08,
+                x[idx] * 1.08,
+                y[idx] * 1.08,
                 str(idx),
                 color="white",
                 fontsize=7,
@@ -87,9 +99,10 @@ def draw_frame(i):
 
     # Completed threads
     for j in range(i):
+        end_j = (j * k) % N
         ax.plot(
-            [x[j], x[(j * k) % N]],
-            [y[j], y[(j * k) % N]],
+            [x[j], x[end_j]],
+            [y[j], y[end_j]],
             color="#e91e63",
             linewidth=0.8
         )
@@ -110,14 +123,14 @@ def draw_frame(i):
 
     # Info text
     ax.text(
-        -1.30, 1.20,
+        -1.28, 1.18,
         f"Rule:\n"
         f"  end = (i × k) mod N\n\n"
         f"Step:\n"
         f"  i = {i}\n"
         f"  end = {end}\n\n"
-        f"Final loops = gcd(N, k − 1)\n"
-        f"gcd({N}, {k-1}) = {cycles}",
+        f"Final loops:\n"
+        f"  gcd(N, k − 1) = {cycles}",
         color="white",
         fontsize=9,
         ha="left",
@@ -128,16 +141,7 @@ def draw_frame(i):
     return fig
 
 # ==========================
-# FRAME CONTROL
-# ==========================
-if next_btn:
-    st.session_state.frame = min(st.session_state.frame + 1, N - 1)
-
-if prev_btn:
-    st.session_state.frame = max(st.session_state.frame - 1, 0)
-
-# ==========================
-# CANVAS (SINGLE!)
+# SINGLE CANVAS (NO STACKING)
 # ==========================
 canvas = st.empty()
 
@@ -152,7 +156,7 @@ if auto_btn:
         time.sleep(interval / 1000)
 
 # ==========================
-# MANUAL FRAME DISPLAY
+# MANUAL DISPLAY
 # ==========================
 fig = draw_frame(st.session_state.frame)
 canvas.pyplot(fig)
